@@ -7,16 +7,20 @@ struct SharedVars {
     t2: i32,
 }
 
-#[derive(Debug)]
-struct Process {
+#[derive(Debug, Clone)]
+struct Trans {
     label: Label,
     loc: Loc,
 }
 
-impl Process {
+impl Trans {
     fn new(label: Label, loc: Loc) -> Self {
-        Process { label, loc }
+        Trans { label, loc }
     }
+}
+
+fn trans_true(_sv: SharedVars) -> bool {
+    true
 }
 
 fn main() {
