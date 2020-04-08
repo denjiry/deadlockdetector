@@ -26,41 +26,15 @@ fn trans_true(_sv: SharedVars) -> bool {
 fn main() {
     let trans1 = Trans::new("read", "loc");
     let process = vec![trans1];
-    let pp01: fn(SharedVars) -> SharedVars = p01;
-    // let pp01: fn(SharedVars) -> SharedVars = |sv| SharedVars {
-    //     x: sv.x,
-    //     t1: sv.x,
-    //     t2: sv.t2,
-    // };
-    let pp12: fn(SharedVars) -> SharedVars = p12;
-    let pp23: fn(SharedVars) -> SharedVars = p23;
+    let p01: fn(SharedVars) -> SharedVars = |sv| SharedVars { t1: sv.x, ..sv };
+    let p12: fn(SharedVars) -> SharedVars = |sv| SharedVars {
+        t1: sv.t1 + 1,
+        ..sv
+    };
+    let p23: fn(SharedVars) -> SharedVars = |sv| SharedVars { x: sv.t1, ..sv };
     let process_P = [
-        ("P0", ("read", "P1", trans_true, pp01)),
-        ("P1", ("inc", "P2", trans_true, pp12)),
-        ("P2", ("write", "P3", trans_true, pp23)),
+        ("P0", ("read", "P1", trans_true, p01)),
+        ("P1", ("inc", "P2", trans_true, p12)),
+        ("P2", ("write", "P3", trans_true, p23)),
     ];
-}
-
-fn p01(sv: SharedVars) -> SharedVars {
-    SharedVars {
-        x: sv.x,
-        t1: sv.x,
-        t2: sv.t2,
-    }
-}
-
-fn p12(sv: SharedVars) -> SharedVars {
-    SharedVars {
-        x: sv.t1,
-        t1: sv.t1,
-        t2: sv.t2,
-    }
-}
-
-fn p23(sv: SharedVars) -> SharedVars {
-    SharedVars {
-        x: sv.x,
-        t1: sv.x,
-        t2: sv.t2,
-    }
 }
