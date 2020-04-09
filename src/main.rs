@@ -7,15 +7,30 @@ struct SharedVars {
     t2: i32,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 struct Trans {
+    source: Loc,
     label: Label,
-    loc: Loc,
+    dest: Loc,
+    guard: fn(SharedVars) -> bool,
+    action: fn(SharedVars) -> SharedVars,
 }
 
 impl Trans {
-    fn new(label: Label, loc: Loc) -> Self {
-        Trans { label, loc }
+    fn new(
+        source: Loc,
+        label: Label,
+        dest: Loc,
+        guard: fn(SharedVars) -> bool,
+        action: fn(SharedVars) -> SharedVars,
+    ) -> Self {
+        Trans {
+            source,
+            label,
+            dest,
+            guard,
+            action,
+        }
     }
 }
 
@@ -23,18 +38,19 @@ fn trans_true(_sv: SharedVars) -> bool {
     true
 }
 
+fn print_state() {}
+
 fn main() {
-    let trans1 = Trans::new("read", "loc");
-    let process = vec![trans1];
     let p01: fn(SharedVars) -> SharedVars = |sv| SharedVars { t1: sv.x, ..sv };
     let p12: fn(SharedVars) -> SharedVars = |sv| SharedVars {
         t1: sv.t1 + 1,
         ..sv
     };
     let p23: fn(SharedVars) -> SharedVars = |sv| SharedVars { x: sv.t1, ..sv };
+    let tt: fn(SharedVars) -> bool = trans_true;
     let process_P = [
-        ("P0", ("read", "P1", trans_true, p01)),
-        ("P1", ("inc", "P2", trans_true, p12)),
-        ("P2", ("write", "P3", trans_true, p23)),
+        Trans::new("P0", "read", "P1", tt, p01),
+        Trans::new("P1", "inc", "P2", tt, p12),
+        Trans::new("P2", "write", "P3", tt, p23),
     ];
 }
