@@ -1,6 +1,7 @@
 type Label = &'static str;
 type Loc = &'static str;
 
+#[derive(Debug)]
 struct SharedVars {
     x: i32,
     t1: i32,
@@ -57,6 +58,12 @@ fn print_process(process: &Vec<Trans>) {
     println!("}}");
 }
 
+type Process = Vec<Trans>;
+fn concurrent_composition(r0: SharedVars, ps: Vec<Process>) {
+    let s0: (SharedVars, Vec<&str>) = (r0, ps.iter().map(|p| p[0].source).collect());
+    println!("{:?}", s0);
+}
+
 fn main() {
     let p01: fn(SharedVars) -> SharedVars = |sv| SharedVars { t1: sv.x, ..sv };
     let p12: fn(SharedVars) -> SharedVars = |sv| SharedVars {
@@ -71,4 +78,8 @@ fn main() {
         Trans::new("P2", "write", "P3", tt, p23),
     ];
     print_process(&process_p);
+
+    let r0 = SharedVars { x: 0, t1: 0, t2: 0 };
+    let ps = vec![process_p];
+    concurrent_composition(r0, ps);
 }
