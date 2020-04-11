@@ -61,7 +61,8 @@ fn print_process(process: &Vec<Trans>) {
 type Process = Vec<Trans>;
 fn concurrent_composition(r0: SharedVars, ps: Vec<Process>) {
     let s0: (SharedVars, Vec<&str>) = (r0, ps.iter().map(|p| p[0].source).collect());
-    println!("{:?}", s0);
+    let htable = "a";
+    let que = "q";
 }
 
 fn main() {
