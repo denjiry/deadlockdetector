@@ -38,12 +38,23 @@ fn trans_true(_sv: SharedVars) -> bool {
     true
 }
 
-fn print_states(process: Vec<Trans>) {}
+fn print_states(process: Vec<Trans>) {
+    for p in process.iter() {
+        println!("{:?};", p.source);
+    }
+}
 
-fn print_process(process: Vec<Trans>) {
+fn print_trans(process: Vec<Trans>) {
+    for p in process.iter() {
+        println!("{:?} -> {:?} [label={:?}];", p.source, p.dest, p.label);
+    }
+}
+
+fn print_process(process: &Vec<Trans>) {
     print!("digraph {{");
-    print_states(process);
-    println!("");
+    print_states(process.to_vec());
+    print_trans(process.to_vec());
+    println!("}}");
 }
 
 fn main() {
@@ -54,10 +65,10 @@ fn main() {
     };
     let p23: fn(SharedVars) -> SharedVars = |sv| SharedVars { x: sv.t1, ..sv };
     let tt: fn(SharedVars) -> bool = trans_true;
-    let process_P = vec![
+    let process_p = vec![
         Trans::new("P0", "read", "P1", tt, p01),
         Trans::new("P1", "inc", "P2", tt, p12),
         Trans::new("P2", "write", "P3", tt, p23),
     ];
-    print_process(process_P);
+    print_process(&process_p);
 }
