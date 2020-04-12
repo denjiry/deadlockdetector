@@ -74,10 +74,25 @@ fn concurrent_composition(r0: SharedVars, ps: Vec<Process>) {
     };
     let label0 = "---";
     let mut htable = HashMap::new();
-    htable.insert(&s0, 1);
+    htable.insert(&s0, (0, vec![]));
     let que = vec![(&s0, 0, vec![(label0, &s0)])];
     let deadlocks = Vec::<u8>::new();
-    loop {}
+    loop {
+        let (state, id, path) = que.pop().unwrap();
+        let transes = collect_trans(state, ps);
+    }
+}
+
+fn collect_trans(state: State, ps: Vec<Process>) -> Vec<(Label, Loc)> {
+    let lts = Vec::new();
+    let locs: Vec<Loc> = state.locs;
+    for (loc, process) in Vec::zip(locs.iter(), ps.iter()).iter() {
+        for trans in process.iter() {
+            if trans.guard(state.sv) {
+                let sv = trans.action(state.sv);
+            }
+        }
+    }
 }
 
 fn main() {
