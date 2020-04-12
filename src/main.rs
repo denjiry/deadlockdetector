@@ -1,7 +1,9 @@
+use std::collections::HashMap;
+
 type Label = &'static str;
 type Loc = &'static str;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 struct SharedVars {
     x: i32,
     t1: i32,
@@ -58,11 +60,24 @@ fn print_process(process: &Vec<Trans>) {
     println!("}}");
 }
 
+#[derive(Clone, Hash, PartialEq, Eq)]
+struct State {
+    sv: SharedVars,
+    locs: Vec<Loc>,
+}
+
 type Process = Vec<Trans>;
 fn concurrent_composition(r0: SharedVars, ps: Vec<Process>) {
-    let s0: (SharedVars, Vec<&str>) = (r0, ps.iter().map(|p| p[0].source).collect());
-    let htable = "a";
-    let que = "q";
+    let s0 = State {
+        sv: r0,
+        locs: ps.iter().map(|p| p[0].source).collect(),
+    };
+    let label0 = "---";
+    let mut htable = HashMap::new();
+    htable.insert(&s0, 1);
+    let que = vec![(&s0, 0, vec![(label0, &s0)])];
+    let deadlocks = Vec::<u8>::new();
+    loop {}
 }
 
 fn main() {
