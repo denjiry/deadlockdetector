@@ -3,14 +3,14 @@ use std::collections::HashMap;
 type Label = &'static str;
 type Loc = &'static str;
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 struct SharedVars {
     x: i32,
     t1: i32,
     t2: i32,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 struct Trans {
     source: Loc,
     label: Label,
@@ -60,7 +60,7 @@ fn print_process(process: &Vec<Trans>) {
     println!("}}");
 }
 
-#[derive(Clone, Hash, PartialEq, Eq)]
+#[derive(Hash, PartialEq, Eq)]
 struct State {
     sv: SharedVars,
     locs: Vec<Loc>,
