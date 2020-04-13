@@ -83,16 +83,19 @@ fn concurrent_composition(r0: SharedVars, ps: Vec<Process>) {
     }
 }
 
-fn collect_trans(state: State, ps: Vec<Process>) -> Vec<(Label, Loc)> {
+fn collect_trans(state: &State, ps: Vec<Process>) -> Vec<(Label, Loc)> {
     let lts = Vec::new();
     let locs: Vec<Loc> = state.locs;
-    for (loc, process) in Vec::zip(locs.iter(), ps.iter()).iter() {
+    for (loc, process) in locs.iter().zip(ps.iter()) {
         for trans in process.iter() {
-            if trans.guard(state.sv) {
-                let sv = trans.action(state.sv);
+            let guard = trans.guard;
+            let action = trans.action;
+            if guard(state.sv) {
+                let sv = action(state.sv);
             }
         }
     }
+    lts
 }
 
 fn main() {
