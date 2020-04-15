@@ -89,7 +89,8 @@ fn collect_trans(state: &State, ps: Vec<Process>) -> Vec<(Label, State)> {
     let lts = Vec::new();
     let sv = state.sv;
     let locs: Vec<Loc> = state.locs;
-    for (i, (loc, process)) in locs.iter().zip(ps.iter()).enumerate() {
+    assert_eq!(locs.len(), ps.len());
+    for (i, process) in ps.iter().enumerate() {
         for trans in process.iter() {
             let guard = trans.guard;
             let action = trans.action;
