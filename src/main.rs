@@ -76,10 +76,12 @@ fn concurrent_composition(r0: SharedVars, ps: Vec<Process>) {
     let mut htable = HashMap::new();
     htable.insert(&s0, (0, vec![]));
     let que = vec![(&s0, 0, vec![(label0, &s0)])];
-    let deadlocks = Vec::<u8>::new();
-    loop {
-        let (state, id, path) = que.pop().unwrap();
+    let deadlocks = Vec::new();
+    while let Some((state, id, path)) = que.pop() {
         let transes = collect_trans(state, ps);
+        if transes.is_empty() {
+            deadlocks.push(path);
+        }
     }
 }
 
