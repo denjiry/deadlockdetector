@@ -60,7 +60,7 @@ fn print_process(process: &Vec<Trans>) {
     println!("}}");
 }
 
-#[derive(Hash, PartialEq, Eq)]
+#[derive(Hash, PartialEq, Eq, Clone)]
 struct State {
     sv: SharedVars,
     locs: Vec<Loc>,
@@ -75,35 +75,35 @@ fn concurrent_composition(r0: SharedVars, ps: Vec<Process>) -> Vec<Path> {
     };
     let label0 = "---";
     let mut htable = HashMap::new();
-    htable.insert(s0, (0, vec![]));
-    let que: Vec<(State, u8, Path)> = vec![(s0, 0, vec![(label0, s0)])];
-    let deadlocks = Vec::new();
-    while let Some((state, id, path)) = que.pop() {
-        let transes = collect_trans(&state, ps);
+    htable.insert(s0.clone(), (0, vec![]));
+    let que: Vec<(State, u8, Path)> = vec![(s0.clone(), 0, vec![(label0, s0)])];
+    let mut deadlocks = Vec::new();
+    for (state, id, path) in que {
+        let transes = collect_trans(&state, &ps);
         if transes.is_empty() {
             deadlocks.push(path);
         }
+        htable.insert(state, (id, transes));
     }
     deadlocks
 }
 
-fn collect_trans(state: &State, ps: Vec<Process>) -> Vec<(Label, State)> {
-    let lts = Vec::new();
+fn collect_trans(state: &State, ps: &Vec<Process>) -> Vec<(Label, State)> {
+    let mut lts = Vec::new();
     let sv = state.sv;
-    let locs: Vec<Loc> = state.locs;
+    let locs = &state.locs;
     assert_eq!(locs.len(), ps.len());
     for (i, process) in ps.iter().enumerate() {
         for trans in process.iter() {
             let guard = trans.guard;
             let action = trans.action;
             let label = trans.label;
-            let dest: &str = trans.dest;
-            let mut new_locs = &mut locs.clone();
             if guard(sv) {
-                new_locs[i] = dest;
+                let mut new_locs = locs.clone();
+                new_locs[i] = trans.dest;
                 let new_state = State {
                     sv: action(sv),
-                    locs: new_locs.to_vec(),
+                    locs: new_locs,
                 };
                 lts.push((label, new_state));
             }
