@@ -76,14 +76,23 @@ fn concurrent_composition(r0: SharedVars, ps: Vec<Process>) -> Vec<Path> {
     let label0 = "---";
     let mut htable = HashMap::new();
     htable.insert(s0.clone(), (0, vec![]));
-    let que: Vec<(State, u8, Path)> = vec![(s0.clone(), 0, vec![(label0, s0)])];
+    let mut que: Vec<(State, usize, Path)> = vec![(s0.clone(), 0, vec![(label0, s0)])];
     let mut deadlocks = Vec::new();
     for (state, id, path) in que {
-        let transes = collect_trans(&state, &ps);
+        let transes: Vec<(Label, State)> = collect_trans(&state, &ps);
         if transes.is_empty() {
-            deadlocks.push(path);
+            deadlocks.push(path.clone());
         }
-        htable.insert(state, (id, transes));
+        htable.insert(state, (id, transes.clone()));
+        for (label, target) in transes {
+            if !htable.contains_key(&target) {
+                let id = htable.len();
+                htable.insert(target.clone(), (id, vec![]));
+                let mut new_path = vec![(label, target.clone())];
+                new_path.extend_from_slice(&path);
+                que.push((target, id, new_path));
+            }
+        }
     }
     deadlocks
 }
