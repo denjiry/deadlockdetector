@@ -67,22 +67,24 @@ struct State {
 }
 
 type Process = Vec<Trans>;
-fn concurrent_composition(r0: SharedVars, ps: Vec<Process>) {
+type Path = Vec<(Label, State)>;
+fn concurrent_composition(r0: SharedVars, ps: Vec<Process>) -> Vec<Path> {
     let s0 = State {
         sv: r0,
-        locs: ps.iter().map(|p| p[0].source).collect(),
+        locs: ps.clone().iter().map(|p| p[0].source).collect(),
     };
     let label0 = "---";
     let mut htable = HashMap::new();
-    htable.insert(&s0, (0, vec![]));
-    let que = vec![(&s0, 0, vec![(label0, &s0)])];
+    htable.insert(s0, (0, vec![]));
+    let que: Vec<(State, u8, Path)> = vec![(s0, 0, vec![(label0, s0)])];
     let deadlocks = Vec::new();
     while let Some((state, id, path)) = que.pop() {
-        let transes = collect_trans(state, ps);
+        let transes = collect_trans(&state, ps);
         if transes.is_empty() {
             deadlocks.push(path);
         }
     }
+    deadlocks
 }
 
 fn collect_trans(state: &State, ps: Vec<Process>) -> Vec<(Label, State)> {
