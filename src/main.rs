@@ -14,7 +14,7 @@ struct SharedVars {
 struct Trans {
     source: Loc,
     label: Label,
-    dest: Loc,
+    target: Loc,
     guard: fn(SharedVars) -> bool,
     action: fn(SharedVars) -> SharedVars,
 }
@@ -23,14 +23,14 @@ impl Trans {
     fn new(
         source: Loc,
         label: Label,
-        dest: Loc,
+        target: Loc,
         guard: fn(SharedVars) -> bool,
         action: fn(SharedVars) -> SharedVars,
     ) -> Self {
         Trans {
             source,
             label,
-            dest,
+            target,
             guard,
             action,
         }
@@ -49,7 +49,7 @@ fn print_states(process: Vec<Trans>) {
 
 fn print_trans(process: Vec<Trans>) {
     for p in process.iter() {
-        println!("{:?} -> {:?} [label={:?}];", p.source, p.dest, p.label);
+        println!("{:?} -> {:?} [label={:?}];", p.source, p.target, p.label);
     }
 }
 
