@@ -80,7 +80,7 @@ fn concurrent_composition(r0: SharedVars, ps: Vec<Process>) -> Vec<Path> {
         locs: ps.clone().iter().map(|p| p[0].source).collect(),
     };
     let label0 = "---";
-    let mut htable = HashMap::new();
+    let mut htable: HashMap<State, (usize, Path)> = HashMap::new();
     htable.insert(s0.clone(), (0, vec![]));
     let path0 = vec![Node {
         label: label0,
@@ -89,28 +89,29 @@ fn concurrent_composition(r0: SharedVars, ps: Vec<Process>) -> Vec<Path> {
     let mut que: Vec<(State, usize, Path)> = vec![(s0.clone(), 0, path0)];
     let mut deadlocks = Vec::new();
     for (state, id, path) in que {
-        let transes: Vec<(Label, State)> = collect_trans(&state, &ps);
+        let transes: Path = collect_trans(&state, &ps);
         if transes.is_empty() {
             deadlocks.push(path.clone());
         }
-        htable.insert(state, (id, transes.clone()));
-        for (label, target) in transes {
-            if !htable.contains_key(&target) {
+        htable.insert(state.clone(), (id, transes.clone()));
+        for node in transes {
+            if !htable.contains_key(&node.state) {
                 let id = htable.len();
-                htable.insert(target.clone(), (id, vec![]));
-                let mut new_path = vec![(label, target.clone())];
-                new_path.extend_from_slice(&path);
-                que.push((target, id, new_path));
+                htable.insert(node.state.clone(), (id, vec![]));
+                // Queue.add (target, id, (label, target)::path) que)
+                let mut new_path = vec![node.clone()];
+                new_path.append(&mut path.clone());
+                que.push((node.state, id, new_path));
             }
         }
     }
     deadlocks
 }
 
-fn collect_trans(state: &State, ps: &Vec<Process>) -> Vec<(Label, State)> {
+fn collect_trans(st: &State, ps: &Vec<Process>) -> Vec<Node> {
     let mut lts = Vec::new();
-    let sv = state.sv;
-    let locs = &state.locs;
+    let sv = st.sv;
+    let locs = &st.locs;
     assert_eq!(locs.len(), ps.len());
     for (i, process) in ps.iter().enumerate() {
         for trans in process.iter() {
@@ -119,12 +120,12 @@ fn collect_trans(state: &State, ps: &Vec<Process>) -> Vec<(Label, State)> {
             let label = trans.label;
             if guard(sv) {
                 let mut new_locs = locs.clone();
-                new_locs[i] = trans.dest;
-                let new_state = State {
+                new_locs[i] = trans.target;
+                let state = State {
                     sv: action(sv),
                     locs: new_locs,
                 };
-                lts.push((label, new_state));
+                lts.push(Node { label, state });
             }
         }
     }
