@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 
 type Label = &'static str;
 type Loc = &'static str;
@@ -86,9 +86,11 @@ fn concurrent_composition(r0: SharedVars, ps: Vec<Process>) -> Vec<Path> {
         label: label0,
         state: s0.clone(),
     }];
-    let mut que: Vec<(State, usize, Path)> = vec![(s0.clone(), 0, path0)];
+    let mut que: VecDeque<(State, usize, Path)> = VecDeque::new();
+    que.push_back((s0.clone(), 0, path0));
     let mut deadlocks = Vec::new();
-    for (state, id, path) in que {
+    while !que.is_empty() {
+        let (state, id, path) = que.pop_front().unwrap();
         let transes: Path = collect_trans(&state, &ps);
         if transes.is_empty() {
             deadlocks.push(path.clone());
@@ -101,7 +103,7 @@ fn concurrent_composition(r0: SharedVars, ps: Vec<Process>) -> Vec<Path> {
                 // Queue.add (target, id, (label, target)::path) que)
                 let mut new_path = vec![node.clone()];
                 new_path.append(&mut path.clone());
-                que.push((node.state, id, new_path));
+                que.push_back((node.state, id, new_path));
             }
         }
     }
