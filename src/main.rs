@@ -152,16 +152,28 @@ fn main() {
         ..sv
     };
     let p23: fn(SharedVars) -> SharedVars = |sv| SharedVars { x: sv.t1, ..sv };
+    let q01: fn(SharedVars) -> SharedVars = |sv| SharedVars { t2: sv.x, ..sv };
+    let q12: fn(SharedVars) -> SharedVars = |sv| SharedVars {
+        t2: sv.t2 + 1,
+        ..sv
+    };
+    let q23: fn(SharedVars) -> SharedVars = |sv| SharedVars { x: sv.t2, ..sv };
     let tt: fn(SharedVars) -> bool = trans_true;
     let process_p = vec![
         Trans::new("P0", "read", "P1", tt, p01),
         Trans::new("P1", "inc", "P2", tt, p12),
         Trans::new("P2", "write", "P3", tt, p23),
     ];
+    let process_q = vec![
+        Trans::new("Q0", "read", "Q1", tt, q01),
+        Trans::new("Q1", "inc", "Q2", tt, q12),
+        Trans::new("Q2", "write", "Q3", tt, q23),
+    ];
     print_process(&process_p);
+    print_process(&process_q);
 
     let r0 = SharedVars { x: 0, t1: 0, t2: 0 };
-    let ps = vec![process_p];
+    let ps = vec![process_p, process_q];
     let (htable, deadlocks) = concurrent_composition(r0, ps);
     print_deadlocks(deadlocks.clone());
     viz_lts(htable, deadlocks);
