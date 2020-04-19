@@ -74,7 +74,10 @@ struct Node {
 
 type Process = Vec<Trans>;
 type Path = Vec<Node>;
-fn concurrent_composition(r0: SharedVars, ps: Vec<Process>) -> Vec<Path> {
+fn concurrent_composition(
+    r0: SharedVars,
+    ps: Vec<Process>,
+) -> (HashMap<State, (usize, Path)>, Vec<Path>) {
     let s0 = State {
         sv: r0,
         locs: ps.clone().iter().map(|p| p[0].source).collect(),
@@ -107,7 +110,7 @@ fn concurrent_composition(r0: SharedVars, ps: Vec<Process>) -> Vec<Path> {
             }
         }
     }
-    deadlocks
+    (htable, deadlocks)
 }
 
 fn collect_trans(st: &State, ps: &Vec<Process>) -> Vec<Node> {
@@ -134,6 +137,14 @@ fn collect_trans(st: &State, ps: &Vec<Process>) -> Vec<Node> {
     lts
 }
 
+fn print_deadlocks(deadlocks: Vec<Path>) {
+    println!("print_deadlocks");
+}
+
+fn viz_lts(htable: HashMap<State, (usize, Path)>, deadlocks: Vec<Path>) {
+    println!("viz_lts");
+}
+
 fn main() {
     let p01: fn(SharedVars) -> SharedVars = |sv| SharedVars { t1: sv.x, ..sv };
     let p12: fn(SharedVars) -> SharedVars = |sv| SharedVars {
@@ -151,5 +162,7 @@ fn main() {
 
     let r0 = SharedVars { x: 0, t1: 0, t2: 0 };
     let ps = vec![process_p];
-    concurrent_composition(r0, ps);
+    let (htable, deadlocks) = concurrent_composition(r0, ps);
+    print_deadlocks(deadlocks.clone());
+    viz_lts(htable, deadlocks);
 }
