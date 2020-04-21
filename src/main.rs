@@ -10,7 +10,7 @@ struct SharedVars {
     t2: i32,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 struct Trans {
     source: Loc,
     label: Label,
@@ -60,13 +60,13 @@ fn print_process(process: &Vec<Trans>) {
     println!("}}");
 }
 
-#[derive(Hash, PartialEq, Eq, Clone)]
+#[derive(Hash, PartialEq, Eq, Clone, Debug)]
 struct State {
     sv: SharedVars,
     locs: Vec<Loc>,
 }
 
-#[derive(Hash, PartialEq, Eq, Clone)]
+#[derive(Hash, PartialEq, Eq, Clone, Debug)]
 struct Node {
     label: Label,
     state: State,
