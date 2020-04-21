@@ -139,6 +139,16 @@ fn collect_trans(st: &State, ps: &Vec<Process>) -> Vec<Node> {
 
 fn print_deadlocks(deadlocks: Vec<Path>) {
     println!("print_deadlocks");
+    for (i, deadlock) in deadlocks.iter().enumerate() {
+        println!("Deadlock: {:>2}", i);
+        for node in deadlock.iter().rev() {
+            println!(
+                "label:{:>6}  {:?} {:?} ",
+                node.label, node.state.sv, node.state.locs
+            );
+        }
+        println!("");
+    }
 }
 
 fn viz_lts(htable: HashMap<State, (usize, Path)>, deadlocks: Vec<Path>) {
