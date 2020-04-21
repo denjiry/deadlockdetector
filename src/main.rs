@@ -93,7 +93,7 @@ fn concurrent_composition(
     que.push_back((s0.clone(), 0, path0));
     let mut deadlocks = Vec::new();
     while !que.is_empty() {
-        let (state, id, path) = que.pop_front().unwrap();
+        let (state, id, path) = que.pop_front().expect("que must not be empty.");
         let transes: Path = collect_trans(&state, &ps);
         if transes.is_empty() {
             deadlocks.push(path.clone());
