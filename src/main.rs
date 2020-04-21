@@ -119,19 +119,21 @@ fn collect_trans(st: &State, ps: &Vec<Process>) -> Vec<Node> {
     let locs = &st.locs;
     assert_eq!(locs.len(), ps.len());
     for (i, process) in ps.iter().enumerate() {
-        for trans in process.iter() {
-            let guard = trans.guard;
-            let action = trans.action;
-            let label = trans.label;
-            if guard(sv) {
-                let mut new_locs = locs.clone();
-                new_locs[i] = trans.target;
-                let state = State {
-                    sv: action(sv),
-                    locs: new_locs,
-                };
-                lts.push(Node { label, state });
-            }
+        let trans = process
+            .iter()
+            .find(|trans| trans.source == locs[i])
+            .unwrap_or_else(|| panic!("process:{:?} must contain loc:[{:?}]", process, locs[i]));
+        let guard = trans.guard;
+        let action = trans.action;
+        let label = trans.label;
+        if guard(sv) {
+            let mut new_locs = locs.clone();
+            new_locs[i] = trans.target;
+            let state = State {
+                sv: action(sv),
+                locs: new_locs,
+            };
+            lts.push(Node { label, state });
         }
     }
     lts
