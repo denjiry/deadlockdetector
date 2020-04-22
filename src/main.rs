@@ -151,21 +151,21 @@ fn print_deadlocks(deadlocks: Vec<Path>) {
     }
 }
 
-fn viz_lts(htable: HashMap<State, (usize, Path)>, deadlocks: Vec<Path>) {
+fn viz_lts(htable: HashMap<State, (usize, Path)>) {
     println!("viz_lts");
     println!("digraph {{");
     // print state
-    for (state, (id, path)) in htable {
+    for (state, (id, path)) in &htable {
         print!("{} [label=\"{} \\n", &id, &id);
         // let locs = state.locs;
-        for loc in state.locs {
+        for loc in &state.locs {
             print!("{} ", loc);
         }
         let sv = state.sv;
         print!("\\n x={} t1={} t2={}\",", sv.x, sv.t1, sv.t2);
         print!(
             "{}",
-            if id == 0 {
+            if *id == 0 {
                 "style=filled,fillcolor=cyan"
             } else if path.is_empty() {
                 "style=filled,fillcolor=pink"
@@ -176,6 +176,15 @@ fn viz_lts(htable: HashMap<State, (usize, Path)>, deadlocks: Vec<Path>) {
         println!("];")
     }
     // print trans
+    for (_state, (sid, path)) in &htable {
+        for node in path {
+            let (tid, _) = htable
+                .get(&node.state)
+                .expect("the key must exists because it is its own key");
+            println!("{} -> {} [label=\"{}\"];", sid, tid, node.label);
+        }
+    }
+    println!("}}");
 }
 
 fn main() {
@@ -208,6 +217,6 @@ fn main() {
     let r0 = SharedVars { x: 0, t1: 0, t2: 0 };
     let ps = vec![process_p, process_q];
     let (htable, deadlocks) = concurrent_composition(r0, ps);
-    print_deadlocks(deadlocks.clone());
-    viz_lts(htable, deadlocks);
+    print_deadlocks(deadlocks);
+    viz_lts(htable);
 }
