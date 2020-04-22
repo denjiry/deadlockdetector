@@ -41,23 +41,31 @@ fn trans_true(_sv: SharedVars) -> bool {
     true
 }
 
-fn print_states(process: Vec<Trans>) {
+fn print_states(process: Vec<Trans>) -> String {
+    let mut dot = String::new();
     for p in process.iter() {
-        println!("{:?};", p.source);
+        dot.push_str(&format!("{:?};\n", p.source));
     }
+    dot
 }
 
-fn print_trans(process: Vec<Trans>) {
+fn print_trans(process: Vec<Trans>) -> String {
+    let mut dot = String::new();
     for p in process.iter() {
-        println!("{:?} -> {:?} [label={:?}];", p.source, p.target, p.label);
+        dot.push_str(&format!(
+            "{:?} -> {:?} [label={:?}];\n",
+            p.source, p.target, p.label
+        ));
     }
+    dot
 }
 
-fn print_process(process: &Vec<Trans>) {
-    print!("digraph {{");
-    print_states(process.to_vec());
-    print_trans(process.to_vec());
-    println!("}}");
+fn print_process(process: &Vec<Trans>) -> String {
+    let mut dot = String::from("digraph {\n");
+    dot.push_str(&print_states(process.to_vec()));
+    dot.push_str(&print_trans(process.to_vec()));
+    dot.push_str("}\n");
+    dot
 }
 
 #[derive(Hash, PartialEq, Eq, Clone, Debug)]
@@ -151,19 +159,19 @@ fn print_deadlocks(deadlocks: Vec<Path>) {
     }
 }
 
-fn viz_lts(htable: HashMap<State, (usize, Path)>) {
+fn viz_lts(htable: HashMap<State, (usize, Path)>) -> String {
     println!("viz_lts");
-    println!("digraph {{");
+    let mut dot = String::from("digraph { \n");
     // print state
     for (state, (id, path)) in &htable {
-        print!("{} [label=\"{} \\n", &id, &id);
+        dot.push_str(&format!("{} [label=\"{} \\n", &id, &id));
         // let locs = state.locs;
         for loc in &state.locs {
-            print!("{} ", loc);
+            dot.push_str(&format!("{} ", loc));
         }
         let sv = state.sv;
-        print!("\\n x={} t1={} t2={}\",", sv.x, sv.t1, sv.t2);
-        print!(
+        dot.push_str(&format!("\\n x={} t1={} t2={}\",", sv.x, sv.t1, sv.t2));
+        dot.push_str(&format!(
             "{}",
             if *id == 0 {
                 "style=filled,fillcolor=cyan"
@@ -172,8 +180,8 @@ fn viz_lts(htable: HashMap<State, (usize, Path)>) {
             } else {
                 ""
             }
-        );
-        println!("];")
+        ));
+        dot.push_str(&format!("];\n"));
     }
     // print trans
     for (_state, (sid, path)) in &htable {
@@ -181,10 +189,11 @@ fn viz_lts(htable: HashMap<State, (usize, Path)>) {
             let (tid, _) = htable
                 .get(&node.state)
                 .expect("the key must exists because it is its own key");
-            println!("{} -> {} [label=\"{}\"];", sid, tid, node.label);
+            dot.push_str(&format!("{} -> {} [label=\"{}\"];\n", sid, tid, node.label));
         }
     }
-    println!("}}");
+    dot.push_str(&format!("}}\n"));
+    dot
 }
 
 fn main() {
@@ -211,12 +220,13 @@ fn main() {
         Trans::new("Q1", "inc", "Q2", tt, q12),
         Trans::new("Q2", "write", "Q3", tt, q23),
     ];
-    print_process(&process_p);
-    print_process(&process_q);
+    println!("{}", print_process(&process_p));
+    println!("{}", print_process(&process_q));
 
     let r0 = SharedVars { x: 0, t1: 0, t2: 0 };
     let ps = vec![process_p, process_q];
     let (htable, deadlocks) = concurrent_composition(r0, ps);
     print_deadlocks(deadlocks);
-    viz_lts(htable);
+    let dot = viz_lts(htable);
+    println!("{}", dot);
 }
