@@ -153,6 +153,29 @@ fn print_deadlocks(deadlocks: Vec<Path>) {
 
 fn viz_lts(htable: HashMap<State, (usize, Path)>, deadlocks: Vec<Path>) {
     println!("viz_lts");
+    println!("digraph {{");
+    // print state
+    for (state, (id, path)) in htable {
+        print!("{} [label=\"{} \\n", &id, &id);
+        // let locs = state.locs;
+        for loc in state.locs {
+            print!("{} ", loc);
+        }
+        let sv = state.sv;
+        print!("\\n x={} t1={} t2={}\",", sv.x, sv.t1, sv.t2);
+        print!(
+            "{}",
+            if id == 0 {
+                "style=filled,fillcolor=cyan"
+            } else if path.is_empty() {
+                "style=filled,fillcolor=pink"
+            } else {
+                ""
+            }
+        );
+        println!("];")
+    }
+    // print trans
 }
 
 fn main() {
