@@ -5,6 +5,7 @@ use std::process::Command;
 
 type Label = &'static str;
 type Loc = &'static str;
+type Process = Vec<Trans>;
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 struct SharedVars {
@@ -44,29 +45,20 @@ fn trans_true(_sv: SharedVars) -> bool {
     true
 }
 
-fn print_states(process: Vec<Trans>) -> String {
-    let mut dot = String::new();
-    for p in process.iter() {
-        dot.push_str(&format!("{:?};\n", p.source));
-    }
-    dot
-}
-
-fn print_trans(process: Vec<Trans>) -> String {
-    let mut dot = String::new();
+fn print_process(process: &[Trans]) -> String {
+    let mut dot = String::from("digraph {\n");
     for p in process.iter() {
         dot.push_str(&format!(
             "{:?} -> {:?} [label={:?}];\n",
             p.source, p.target, p.label
         ));
     }
-    dot
-}
-
-fn print_process(process: &Vec<Trans>) -> String {
-    let mut dot = String::from("digraph {\n");
-    dot.push_str(&print_states(process.to_vec()));
-    dot.push_str(&print_trans(process.to_vec()));
+    for p in process.iter() {
+        dot.push_str(&format!(
+            "{:?} -> {:?} [label={:?}];\n",
+            p.source, p.target, p.label
+        ));
+    }
     dot.push_str("}\n");
     dot
 }
@@ -83,7 +75,6 @@ struct Node {
     state: State,
 }
 
-type Process = Vec<Trans>;
 type Path = Vec<Node>;
 fn concurrent_composition(
     r0: SharedVars,
@@ -101,7 +92,7 @@ fn concurrent_composition(
         state: s0.clone(),
     }];
     let mut que: VecDeque<(State, usize, Path)> = VecDeque::new();
-    que.push_back((s0.clone(), 0, path0));
+    que.push_back((s0, 0, path0));
     let mut deadlocks = Vec::new();
     while !que.is_empty() {
         let (state, id, path) = que.pop_front().expect("que must not be empty.");
@@ -124,7 +115,7 @@ fn concurrent_composition(
     (htable, deadlocks)
 }
 
-fn collect_trans(st: &State, ps: &Vec<Process>) -> Vec<Node> {
+fn collect_trans(st: &State, ps: &[Process]) -> Vec<Node> {
     let mut lts = Vec::new();
     let sv = st.sv;
     let locs = &st.locs;
@@ -158,7 +149,7 @@ fn print_deadlocks(deadlocks: Vec<Path>) {
                 node.label, node.state.sv, node.state.locs
             );
         }
-        println!("");
+        println!();
     }
 }
 
@@ -177,20 +168,17 @@ where
         }
         let sv_str = svprinter(state.sv);
         dot.push_str(&sv_str);
-        dot.push_str(&format!(
-            "{}",
-            if *id == 0 {
-                "style=filled,fillcolor=cyan"
-            } else if path.is_empty() {
-                "style=filled,fillcolor=pink"
-            } else {
-                ""
-            }
-        ));
-        dot.push_str(&format!("];\n"));
+        dot.push_str(if *id == 0 {
+            "style=filled,fillcolor=cyan"
+        } else if path.is_empty() {
+            "style=filled,fillcolor=pink"
+        } else {
+            ""
+        });
+        dot.push_str(&"];\n".to_string());
     }
     // print trans
-    for (_state, (sid, path)) in &htable {
+    for (sid, path) in htable.values() {
         for node in path {
             let (tid, _) = htable
                 .get(&node.state)
@@ -198,15 +186,15 @@ where
             dot.push_str(&format!("{} -> {} [label=\"{}\"];\n", sid, tid, node.label));
         }
     }
-    dot.push_str(&format!("}}\n"));
+    dot.push_str(&"}}\n".to_string());
     dot
 }
 
 fn dotstr2pdf(dotstr: String, filename: String) {
     let dotfilename = format!("../{}.dot", filename);
     {
-        let mut file =
-            File::create(&dotfilename).expect(&format!("fail to create: {}", &dotfilename));
+        let mut file = File::create(&dotfilename)
+            .unwrap_or_else(|_| panic!("fail to create: {}", &dotfilename));
         file.write_all(&dotstr.as_bytes()).expect("fail to write");
     }
     Command::new("dot")
@@ -252,8 +240,7 @@ fn main() {
     let (htable, deadlocks) = concurrent_composition(r0, ps);
     print_deadlocks(deadlocks);
 
-    let svprinter =
-        |sv: SharedVars| format!("\\n x={} t1={} t2={}\",", sv.x, sv.t1, sv.t2).to_string();
+    let svprinter = |sv: SharedVars| format!("\\n x={} t1={} t2={}\",", sv.x, sv.t1, sv.t2);
     let dot = viz_lts(htable, svprinter);
     dotstr2pdf(dot, "dead".to_string());
 }
