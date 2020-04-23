@@ -162,7 +162,10 @@ fn print_deadlocks(deadlocks: Vec<Path>) {
     }
 }
 
-fn viz_lts(htable: HashMap<State, (usize, Path)>) -> String {
+fn viz_lts<F>(htable: HashMap<State, (usize, Path)>, svprinter: F) -> String
+where
+    F: Fn(SharedVars) -> String,
+{
     println!("viz_lts");
     let mut dot = String::from("digraph { \n");
     // print state
@@ -172,8 +175,8 @@ fn viz_lts(htable: HashMap<State, (usize, Path)>) -> String {
         for loc in &state.locs {
             dot.push_str(&format!("{} ", loc));
         }
-        let sv = state.sv;
-        dot.push_str(&format!("\\n x={} t1={} t2={}\",", sv.x, sv.t1, sv.t2));
+        let sv_str = svprinter(state.sv);
+        dot.push_str(&sv_str);
         dot.push_str(&format!(
             "{}",
             if *id == 0 {
@@ -248,6 +251,9 @@ fn main() {
     let ps = vec![process_p, process_q];
     let (htable, deadlocks) = concurrent_composition(r0, ps);
     print_deadlocks(deadlocks);
-    let dot = viz_lts(htable);
+
+    let svprinter =
+        |sv: SharedVars| format!("\\n x={} t1={} t2={}\",", sv.x, sv.t1, sv.t2).to_string();
+    let dot = viz_lts(htable, svprinter);
     dotstr2pdf(dot, "dead".to_string());
 }
