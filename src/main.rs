@@ -239,8 +239,10 @@ fn main() {
         Trans::new("Q1", "inc", "Q2", tt, q12),
         Trans::new("Q2", "write", "Q3", tt, q23),
     ];
-    println!("{}", print_process(&process_p));
-    println!("{}", print_process(&process_q));
+    let dot_p = print_process(&process_p);
+    dotstr2pdf(dot_p, "p".to_string());
+    let dot_q = print_process(&process_q);
+    dotstr2pdf(dot_q, "q".to_string());
 
     let r0 = SharedVars { x: 0, t1: 0, t2: 0 };
     let ps = vec![process_p, process_q];
