@@ -1,4 +1,7 @@
 use std::collections::{HashMap, VecDeque};
+use std::fs::File;
+use std::io::Write;
+use std::process::Command;
 
 type Label = &'static str;
 type Loc = &'static str;
@@ -196,6 +199,22 @@ fn viz_lts(htable: HashMap<State, (usize, Path)>) -> String {
     dot
 }
 
+fn dotstr2pdf(dotstr: String, filename: String) {
+    let dotfilename = format!("../{}.dot", filename);
+    {
+        let mut file =
+            File::create(&dotfilename).expect(&format!("fail to create: {}", &dotfilename));
+        file.write_all(&dotstr.as_bytes()).expect("fail to write");
+    }
+    Command::new("dot")
+        .arg("-Tpdf")
+        .arg("-o")
+        .arg(format!("../{}.pdf", filename))
+        .arg(&dotfilename)
+        .output()
+        .expect("fail to execut cmd");
+}
+
 fn main() {
     let p01: fn(SharedVars) -> SharedVars = |sv| SharedVars { t1: sv.x, ..sv };
     let p12: fn(SharedVars) -> SharedVars = |sv| SharedVars {
@@ -228,5 +247,5 @@ fn main() {
     let (htable, deadlocks) = concurrent_composition(r0, ps);
     print_deadlocks(deadlocks);
     let dot = viz_lts(htable);
-    println!("{}", dot);
+    dotstr2pdf(dot, "dead".to_string());
 }
